@@ -1,6 +1,7 @@
 import itertools
-import copy
-from validation import assert_n_dims
+import deep_learning as dl
+from deep_learning.validation import assert_n_dims
+from deep_learning.utils import zeros
 
 
 class Tensor:
@@ -75,8 +76,8 @@ class Tensor:
 
         if self.shape[1] != other.shape[0]:
             raise ValueError('Tried to multiple two matricies with sizes: {} and {}'.format(self.shape, other.shape))
-        left = Tensor([self.m]) if len(self.shape) == 1 else Tensor(self.m)
-        other = Tensor([[i] for i in other]) if len(other.shape) == 1 else other
+        left = dl.Tensor([self.m]) if len(self.shape) == 1 else dl.Tensor(self.m)
+        other = dl.Tensor([[i] for i in other]) if len(other.shape) == 1 else other
 
         result = zeros((self.shape[0], other.shape[1]))
         it = result.index_iterator()
@@ -86,7 +87,7 @@ class Tensor:
             flat_result = []
             for e in result:
                 flat_result.extend(e)
-            return Tensor(flat_result)
+            return dl.Tensor(flat_result)
         else:
             return result
 
@@ -116,7 +117,7 @@ class Tensor:
 
         return it
 
-    # other <Tensor>
+    # other <dl.Tensor>
     # Returns True if tensors have the same shape false otherwise
     def same_shape(self, other):
         return self.shape == other.shape
@@ -124,8 +125,8 @@ class Tensor:
     @staticmethod
     def get_tensor_shape(t):
         result = []
-        while isinstance(t, list) or isinstance(t, Tensor):
-            if isinstance(t, Tensor):
+        while isinstance(t, list) or isinstance(t, dl.Tensor):
+            if isinstance(t, dl.Tensor):
                 result.extend(t.shape)
                 break
             result.append(len(t))
@@ -135,26 +136,26 @@ class Tensor:
                 t = False
         return tuple(result)
 
-    # x <Tensor> of shape (n,)
+    # x <dl.Tensor> of shape (n,)
     def v_append(self, x):
         assert_n_dims(x, 1)
         if self.shape[0] != x.shape[0]:
-            raise ValueError('The shape of x must match the first dimension of the Tensor but x has {} shape '
-                             'and Tensor has {} shape'.format(x.shape, self.shape))
+            raise ValueError('The shape of x must match the first dimension of the dl.Tensor but x has {} shape '
+                             'and dl.Tensor has {} shape'.format(x.shape, self.shape))
         if self.n_dims == 1:
             result = [x_i for x_i in self.m]
             result.append(x[0])
-            return Tensor(result)
+            return dl.Tensor(result)
         else:
             result = []
             for row, x_i in zip(self.m, x):
                 new_row = []
                 new_row.extend(row)
                 new_row.append(x_i)
-                result.append(Tensor(new_row))
-            return Tensor(result)
+                result.append(dl.Tensor(new_row))
+            return dl.Tensor(result)
 
-    # could -> Tensor for some reason
+    # could -> dl.Tensor for some reason
     # also couldn't do f: function
     def apply(self, f):
         it = self.index_iterator()
@@ -167,18 +168,6 @@ class Tensor:
 
 # value <any>
 # shape <tuple>
-# Returns a Tensor full of value of a certain shape
+# Returns a dl.Tensor full of value of a certain shape
 
 
-def fill(value, shape):
-    rev_shape = shape[::-1]
-    result = [value for i in range(rev_shape[0])]
-    for size in rev_shape[1:]:
-        result = [copy.deepcopy(result) for i in range(size)]
-    return Tensor(result)
-
-
-# shape <tuple>
-# Return a Tensor full of zeros of a certain shape
-def zeros(shape):
-    return fill(0, shape)

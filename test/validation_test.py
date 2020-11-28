@@ -1,8 +1,8 @@
 import pytest
 
 from test.testing_tools import get_positive_tuple
-from utils import zeros
-from validation import assert_n_dims
+from deep_learning.utils import zeros
+from deep_learning.validation import assert_n_dims
 
 t1 = zeros(get_positive_tuple())
 

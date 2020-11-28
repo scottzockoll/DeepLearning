@@ -1,5 +1,5 @@
-from tensor import Tensor
-from utils import zeros, ones
+from deep_learning.tensor import Tensor
+from deep_learning.utils import zeros, ones
 from .testing_tools import get_positive_tuple
 
 t1 = Tensor([1, 2, 3])

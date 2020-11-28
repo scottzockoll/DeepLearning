@@ -1,17 +1,18 @@
-from tensor import Tensor
+import deep_learning as dl
+import copy
+
+print(dir(dl))
+
 
 # value <any>
 # shape <tuple>
 # Returns a Tensor full of value of a certain shape
-import copy
-
-
 def fill(value, shape):
     rev_shape = shape[::-1]
     result = [value for i in range(rev_shape[0])]
     for size in rev_shape[1:]:
         result = [copy.deepcopy(result) for i in range(size)]
-    return Tensor(result)
+    return dl.Tensor(result)
 
 
 # shape <tuple>

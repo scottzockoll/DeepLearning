@@ -97,6 +97,15 @@ class Tensor:
             result[tup] = self[tup] - other[tup]
         return result
 
+    def __eq__(self, other):
+        if self.shape != other.shape:
+            return False
+        it = self.index_iterator()
+        for ind in it():
+            if self[ind] != other[ind]:
+                return False
+        return True
+
     def index_iterator(self):
         shape = self.shape
 

@@ -1,4 +1,6 @@
-language:
-  python
+language: python
+before_install:
+  - pip install codecov
+script: pytest # run tests
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - codecov # submit coverage

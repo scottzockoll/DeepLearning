@@ -31,7 +31,3 @@ def test_sub():
 
 def test_T():
     assert m1.T == m1_T
-
-
-def test_oops():
-    assert True

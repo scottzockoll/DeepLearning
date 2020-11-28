@@ -1,5 +1,5 @@
 import deep_learning as dl
-from deep_learning.utils import zeros, ones
+from deep_learning.utils import zeros, ones, fill
 from .testing_tools import get_positive_tuple
 
 t1 = dl.Tensor([1, 2, 3])
@@ -36,3 +36,7 @@ def test_T():
 def test_len():
     assert len(dl.Tensor([])) == 0
     assert len(t1) == 3
+
+
+def test_apply():
+    assert t2.apply(lambda x: x + 1) == fill(2, t2.shape)

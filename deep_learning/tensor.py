@@ -117,11 +117,6 @@ class Tensor:
 
         return it
 
-    # other <dl.Tensor>
-    # Returns True if tensors have the same shape false otherwise
-    def same_shape(self, other):
-        return self.shape == other.shape
-
     @staticmethod
     def get_tensor_shape(t):
         result = []
@@ -165,9 +160,6 @@ class Tensor:
 
         return result
 
-
 # value <any>
 # shape <tuple>
 # Returns a dl.Tensor full of value of a certain shape
-
-

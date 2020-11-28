@@ -1,7 +1,8 @@
 import itertools
+
 import deep_learning as dl
-from deep_learning.validation import assert_n_dims
 from deep_learning.utils import zeros
+from deep_learning.validation import assert_n_dims
 
 
 class Tensor:
@@ -28,7 +29,7 @@ class Tensor:
             return str(self.m)
         result = ""
         for row in self.m:
-            result += str(row) + '\n'
+            result += str(row) + "\n"
         return result
 
     def __repr__(self):
@@ -71,11 +72,18 @@ class Tensor:
         if self.n_dims == 1 and other.ndims == 1:
             if len(self.shape) != len(other.shape):
                 raise ValueError(
-                    'Tried to multiply two 1d vectors of shapes {} and {}'.format(len(self.shape), len(other)))
+                    "Tried to multiply two 1d vectors of shapes {} and {}".format(
+                        len(self.shape), len(other)
+                    )
+                )
             return sum([i * j for i, j in zip(self.m, other)])
 
         if self.shape[1] != other.shape[0]:
-            raise ValueError('Tried to multiple two matricies with sizes: {} and {}'.format(self.shape, other.shape))
+            raise ValueError(
+                "Tried to multiple two matricies with sizes: {} and {}".format(
+                    self.shape, other.shape
+                )
+            )
         left = dl.Tensor([self.m]) if len(self.shape) == 1 else dl.Tensor(self.m)
         other = dl.Tensor([[i] for i in other]) if len(other.shape) == 1 else other
 
@@ -135,8 +143,10 @@ class Tensor:
     def v_append(self, x):
         assert_n_dims(x, 1)
         if self.shape[0] != x.shape[0]:
-            raise ValueError('The shape of x must match the first dimension of the dl.Tensor but x has {} shape '
-                             'and dl.Tensor has {} shape'.format(x.shape, self.shape))
+            raise ValueError(
+                "The shape of x must match the first dimension of the dl.Tensor but x has {} shape "
+                "and dl.Tensor has {} shape".format(x.shape, self.shape)
+            )
         if self.n_dims == 1:
             result = [x_i for x_i in self.m]
             result.append(x[0])
@@ -159,6 +169,7 @@ class Tensor:
             result[ind] = f(self[ind])
 
         return result
+
 
 # value <any>
 # shape <tuple>

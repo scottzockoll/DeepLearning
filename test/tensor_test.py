@@ -1,18 +1,12 @@
 import deep_learning as dl
-from deep_learning.utils import zeros, ones, fill
+from deep_learning.utils import fill, ones, zeros
+
 from .testing_tools import get_positive_tuple
 
 t1 = dl.Tensor([1, 2, 3])
 t2 = dl.Tensor([1, 1, 1])
-m1 = dl.Tensor([
-    [1, 2, 3],
-    [4, 5, 6]
-])
-m1_T = dl.Tensor([
-    [1, 4],
-    [2, 5],
-    [3, 6]
-])
+m1 = dl.Tensor([[1, 2, 3], [4, 5, 6]])
+m1_T = dl.Tensor([[1, 4], [2, 5], [3, 6]])
 
 
 def test_eq():

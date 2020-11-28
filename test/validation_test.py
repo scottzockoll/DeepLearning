@@ -1,6 +1,7 @@
+from test.testing_tools import get_positive_tuple
+
 import pytest
 
-from test.testing_tools import get_positive_tuple
 from deep_learning.utils import zeros
 from deep_learning.validation import assert_n_dims
 

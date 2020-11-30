@@ -2,8 +2,6 @@ import copy
 
 import deep_learning as dl
 
-print(dir(dl))
-
 
 # value <any>
 # shape <tuple>

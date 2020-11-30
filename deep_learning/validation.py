@@ -13,6 +13,11 @@ def assert_supported_params(supported: dict, param_str: str, class_name: str) ->
         raise ValueError("{} is not a supported {}".format(param_str, class_name))
 
 
-# def assert_vector_has_shape(x, shape):
-#     if x.shape != shape:
-#         return ValueError('Tensor does not have shape')
+def assert_same_shape(a, b):
+    if a.shape != b.shape:
+        raise ValueError("Tensor does not have shape")
+
+
+# Returns true if Tensor is a scalar
+def is_scalar(x):
+    return True if x.shape == (1,) else False

@@ -1,8 +1,9 @@
 import itertools
 
 import deep_learning as dl
-from deep_learning.utils import zeros
-from deep_learning.validation import assert_n_dims
+from deep_learning.utils import fill, zeros
+from deep_learning.validation import (assert_n_dims, assert_same_shape,
+                                      is_scalar)
 
 
 class Tensor:
@@ -68,8 +69,8 @@ class Tensor:
     def __len__(self):
         return len(self.m)
 
-    def __mul__(self, other):
-        if self.n_dims == 1 and other.ndims == 1:
+    def __matmul__(self, other):
+        if self.n_dims == 1 and other.n_dims == 1:
             if len(self.shape) != len(other.shape):
                 raise ValueError(
                     "Tried to multiply two 1d vectors of shapes {} and {}".format(
@@ -99,11 +100,34 @@ class Tensor:
         else:
             return result
 
+    def __add__(self, other):
+        assert_same_shape(self, other)
+        result = zeros(self.shape)
+        it = self.index_iterator()
+        for tup in it():
+            result[tup] = self[tup] + other[tup]
+        return result
+
     def __sub__(self, other):
+        assert_same_shape(self, other)
         result = zeros(self.shape)
         it = self.index_iterator()
         for tup in it():
             result[tup] = self[tup] - other[tup]
+        return result
+
+    def __mul__(self, other):
+        left_term = self
+        right_term = other
+        if is_scalar(self):
+            left_term = fill(self[0], other.shape)
+        if is_scalar(other):
+            right_term = fill(other[0], left_term.shape)
+        assert_same_shape(left_term, right_term)
+        result = zeros(left_term.shape)
+        it = left_term.index_iterator()
+        for tup in it():
+            result[tup] = left_term[tup] * right_term[tup]
         return result
 
     def __eq__(self, other):

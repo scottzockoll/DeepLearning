@@ -77,15 +77,16 @@ class AffineGate:
                 )
             )
         result = self.weights.T @ x
+        print('[Forward in AffineGate] Weights: {}, Computation: {}'.format(self.weights, result))
         return result
 
     def backward(self, dz):
-        print('dz: {}'.format(dz))
         grad_weights = self.x * dz
-        print(grad_weights)
-        self.weights = self.weights - (dl.Tensor([.1]) * ((dl.Tensor([-1])) * grad_weights))
-        print('weights updated to: {}'.format(self.weights))
-        return self.weights.T * dz
+        print('[Backward in AffineGate] Gradient of loss with respect to weights: {}'.format(grad_weights))
+        self.weights = self.weights - (dl.Tensor([.1]) * grad_weights)
+        result = self.weights.T * dz
+        print('[Backward in AffineGate] Weights: {}, Gradient being passed back: {}'.format(self.weights, result))
+        return result
 
 
 class ReluGate:
@@ -94,15 +95,17 @@ class ReluGate:
 
     def forward(self, x):
         self.x = x
-        print('relu: {}'.format(x.apply(relu)))
-        return x.apply(relu)
+        result = x.apply(relu)
+        print('[Forward in ReluGate] Computation: {}'.format(result))
+        return result
 
     def backward(self, dz):
         def f(x):
             return 0 if x <= 0 else 1
 
-        print('relu backward: {}'.format(self.x.apply(f)))
-        return self.x.apply(f) * dz
+        result = self.x.apply(f) * dz
+        print('[Backward in ReluGate] Gradient: {}'.format(result))
+        return result
 
 
 class DummyLoss:
@@ -113,11 +116,15 @@ class DummyLoss:
         self.x = x
         # no need to return because
         # this is always at the end of the network
+        loss = abs((50 - self.x[0]))
+        print('[Forward in DummyLoss] Computation: {}'.format(loss))
+        return loss
 
     def backward(self, dz):
-        loss = (dl.Tensor([50]) - self.x).apply(abs)
-        print('loss of: {}'.format(loss))
-        return dl.Tensor([1])
+        # doesn't do anything with dz because DummyLoss is at the end of the network
+        result = dl.Tensor([1]) if self.x[0] >= 50 else dl.Tensor([-1])
+        print('[Backward in DummyLoss] Gradient: {}'.format(result))
+        return result
 
 
 affine1 = AffineGate(5, 1, w_init_strat='ones')
@@ -130,6 +137,6 @@ graph.add_edge(relu1, loss)
 
 inputs = dl.Tensor([2, -3, 4, 5, 1])
 
-for _ in range(10):
+for _ in range(100):
     graph.forward(inputs)
     graph.backward()

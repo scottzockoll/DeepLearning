@@ -6,7 +6,7 @@ from deep_learning.validation import assert_supported_params
 
 class Layer:
     def __init__(
-        self, n_nodes, act_func, input_size, has_bias=True, w_init_strat="ones"
+            self, n_nodes, act_func, input_size, has_bias=True, w_init_strat="ones"
     ):
         self.act_func = self.validate_act_func(act_func)
         self.n_nodes = n_nodes

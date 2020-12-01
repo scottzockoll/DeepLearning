@@ -15,7 +15,7 @@ def assert_supported_params(supported: dict, param_str: str, class_name: str) ->
 
 def assert_same_shape(a, b):
     if a.shape != b.shape:
-        raise ValueError("Tensor does not have shape")
+        raise ValueError("Tensor does not have the same shape. Left has {} and right has {}".format(a.shape, b.shape))
 
 
 # Returns true if Tensor is a scalar

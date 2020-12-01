@@ -1,17 +1,21 @@
 import deep_learning as dl
+from deep_learning.activations import relu
+
+from deep_learning.utils import ones
+from deep_learning.validation import assert_supported_params
 
 
+# Assumes single chain graph
 class ComputationalGraph:
-    def __init__(self, input_gates):
-        self.input_gates = (
-            input_gates if isinstance(input_gates, list) else list(input_gates)
-        )
+    def __init__(self, input_gate):
+        self.input_gate = input_gate
         self.graph = {}
-        for gate in self.input_gates:
-            self.add_vertex(gate)
+        self.ordered_gates = []
+        self.add_vertex(input_gate)
 
     def add_vertex(self, u):
         self.graph[u] = set()
+        self.ordered_gates.append(u)
 
     def add_edge(self, u, v):
         self.graph.setdefault(u, set()).add(v)
@@ -20,96 +24,21 @@ class ComputationalGraph:
     def __len__(self):
         return len(self.graph)
 
-    def topological_sort(self):
-        seen = set()
-        stack = []  # path variable is gone, stack and order are new
-        order = []  # order will be in reverse order at first
-        q = list(self.input_gates)
-        while q:
-            v = q.pop()
-            if v not in seen:
-                seen.add(v)  # no need to append to path any more
-                q.extend(self.graph[v])
+    def forward(self, input_value):
+        h = input_value
+        for k in self.ordered_gates:
+            h = k.forward(h)
+        return h
 
-                while stack and v not in self.graph[stack[-1]]:  # new stuff here!
-                    order.append(stack.pop())
-                stack.append(v)
-
-        return stack + order[::-1]  # new return value!
-
-    # TODO this does not preserve the order
-    def get_parents(self, gate):
-        result = []
-        for u, vertices in self.graph.items():
-            if gate in vertices:
-                result.append(u)
-
-        return result
-
-    def get_call_stack(self, gate):
-        parents = self.get_parents(gate)
-        if len(parents) != 0:
-            other_parents = []
-            for parent in parents:
-                other_parents.extend(self.get_call_stack(parent))
-            return other_parents + [parent for parent in parents]
-        else:
-            return []
-
-    def forward(self, input_values):
-        results = []
-        for gate in self.topological_sort():
-            print(gate)
-            if gate in self.input_gates:
-                results.append(gate.forward(input_values.pop(0)))
-                # print(results)
-            else:
-                inputs = [results.pop(0) for _ in range(gate.n_inputs)]
-                results.extend(gate.forward(*inputs))
+    def backward(self):
+        grad = 1
+        for k in reversed(self.ordered_gates):
+            grad = k.backward(grad)
+        return grad
 
 
-class Gate:
-    def __init__(self, n_inputs):
-        self.n_inputs = n_inputs
-        self.parents = []
-
-    def set_parent(self, parent):
-        self.parents.append(parent)
-
-
-class MultiplyGate(Gate):
+class ConstantGate:
     def __init__(self):
-        super().__init__(2)
-        self.x = None
-        self.y = None
-
-    def forward(self, x, y):
-        self.x = x
-        self.y = y
-        return x @ y
-
-    def backward(self, dz):
-        dx = dz * self.y
-        dy = dz * self.x
-        return dx, dy
-
-
-class AddGate(Gate):
-    def __init__(self):
-        super().__init__(2)
-        self.x = None
-        self.y = None
-
-    def forward(self, x, y):
-        return x + y
-
-    def backward(self, dz):
-        return dz, dz
-
-
-class ConstantGate(Gate):
-    def __init__(self):
-        super().__init__(1)
         self.x = None
 
     def forward(self, x):
@@ -121,47 +50,86 @@ class ConstantGate(Gate):
         return self.x
 
 
-# t1 = dl.Tensor([1, 2, 3])
-# t2 = dl.Tensor([1, 1, 1])
-# t1 = dl.Tensor([-2, 2])
-# t2 = dl.Tensor([5, 2])
-# t3 = dl.Tensor([-4, 2])
+class AffineGate:
+    def __init__(self, input_size, output_size, w_init_strat):
+        self.input_size = input_size
+        self.output_size = output_size
+        self.weights = self.init_weights(w_init_strat)
+        self.x = None
 
-add = AddGate()
-mul = MultiplyGate()
-x = ConstantGate()
-y = ConstantGate()
-z = ConstantGate()
+    def init_weights(self, w_init_strat: str) -> dl.Tensor:
+        shape_of_weights = (self.input_size, self.output_size) if self.output_size != 1 else (self.input_size,)
+        supported_strats = {
+            "ones": ones
+        }
+        assert_supported_params(
+            supported_strats, w_init_strat, "Weight initialization strategy"
+        )
+        generate_weights = supported_strats[w_init_strat]
+        return dl.Tensor(generate_weights(shape_of_weights))
 
-graph = ComputationalGraph({x, y, z})
-graph.add_edge(x, add)
-graph.add_edge(y, add)
-graph.add_edge(add, mul)
-graph.add_edge(z, mul)
-# graph.forward([dl.Tensor([-2]), dl.Tensor([5]), dl.Tensor([-4])])
+    def forward(self, x):
+        self.x = x
+        if len(x) != self.input_size:
+            raise ValueError(
+                "Input should have shape {} but has shape {}".format(
+                    self.input_size, len(x)
+                )
+            )
+        result = self.weights.T @ x
+        return result
 
-# mul.forward(add.forward(t1, t2), t3)
-# print(mul.backward(dl.Tensor([1])))
-# print(add.backward(mul.backward(dl.Tensor([1])))[0])
+    def backward(self, dz):
+        print('dz: {}'.format(dz))
+        grad_weights = self.x * dz
+        print(grad_weights)
+        self.weights = self.weights - (dl.Tensor([.1]) * ((dl.Tensor([-1])) * grad_weights))
+        print('weights updated to: {}'.format(self.weights))
+        return self.weights.T * dz
 
-# graph = ComputationalGraph()
-# graph.add_edge(add, mul)
-# print(graph.topological_sort())
+
+class ReluGate:
+    def __init__(self):
+        self.x = None
+
+    def forward(self, x):
+        self.x = x
+        print('relu: {}'.format(x.apply(relu)))
+        return x.apply(relu)
+
+    def backward(self, dz):
+        def f(x):
+            return 0 if x <= 0 else 1
+
+        print('relu backward: {}'.format(self.x.apply(f)))
+        return self.x.apply(f) * dz
 
 
-# values = {
-#     'a': ['c'],
-#     'b': ['c', 'd'],
-#     'c': ['d'],
-#     'd': ['e', 'f'],
-#     'e': [],
-#     'f': ['g'],
-#     'g': []
-# }
-# graph = ComputationalGraph(['a', 'b'])
-# for vertex, verticies in values.items():
-#     graph.add_vertex(vertex)
-#     for v in verticies:
-#         graph.add_edge(vertex, v)
-# print(graph.graph)
-# print(graph.topological_sort())
+class DummyLoss:
+    def __init__(self):
+        self.x = None
+
+    def forward(self, x):
+        self.x = x
+        # no need to return because
+        # this is always at the end of the network
+
+    def backward(self, dz):
+        loss = (dl.Tensor([50]) - self.x).apply(abs)
+        print('loss of: {}'.format(loss))
+        return dl.Tensor([1])
+
+
+affine1 = AffineGate(5, 1, w_init_strat='ones')
+relu1 = ReluGate()
+loss = DummyLoss()
+
+graph = ComputationalGraph(affine1)
+graph.add_edge(affine1, relu1)
+graph.add_edge(relu1, loss)
+
+inputs = dl.Tensor([2, -3, 4, 5, 1])
+
+for _ in range(10):
+    graph.forward(inputs)
+    graph.backward()

@@ -37,11 +37,11 @@ class Tensor:
         return self.__str__()
 
     def __iter__(self):
+        self.iter_count = -1
         return self
 
     def __next__(self):
         if self.iter_count == self.__len__() - 1:
-            self.iter_count = -1
             raise StopIteration
         else:
             self.iter_count += 1
@@ -77,7 +77,8 @@ class Tensor:
                         len(self.shape), len(other)
                     )
                 )
-            return sum([i * j for i, j in zip(self.m, other)])
+
+            return dl.Tensor([sum([i * j for i, j in zip(self.m, other)])])
 
         if self.shape[1] != other.shape[0]:
             raise ValueError(
@@ -193,7 +194,6 @@ class Tensor:
             result[ind] = f(self[ind])
 
         return result
-
 
 # value <any>
 # shape <tuple>

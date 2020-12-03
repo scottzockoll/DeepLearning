@@ -47,10 +47,3 @@ class Layer:
         )
         generate_weights = supported_strats[w_init_strat]
         return dl.Tensor(generate_weights(shape_of_weights))
-
-
-lay1 = Layer(3, "relu", 5, w_init_strat="ones")
-lay2 = Layer(2, "relu", 3)
-result = lay2.forward(lay1.forward(dl.Tensor([1, 2, 3, 4, 5])))
-print(lay2.weights.T)
-print(result)

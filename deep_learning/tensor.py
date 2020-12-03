@@ -1,6 +1,5 @@
 import itertools
 
-import deep_learning as dl
 from deep_learning.utils import fill, zeros
 from deep_learning.validation import (assert_n_dims, assert_same_shape,
                                       is_scalar)
@@ -28,10 +27,7 @@ class Tensor:
     def __str__(self):
         if len(self.shape) == 1:
             return str(self.m)
-        result = ""
-        for row in self.m:
-            result += str(row) + "\n"
-        return result
+        return str([row for row in self.m])
 
     def __repr__(self):
         return self.__str__()
@@ -78,7 +74,7 @@ class Tensor:
                     )
                 )
 
-            return dl.Tensor([sum([i * j for i, j in zip(self.m, other)])])
+            return Tensor([sum([i * j for i, j in zip(self.m, other)])])
 
         if self.shape[1] != other.shape[0]:
             raise ValueError(
@@ -86,8 +82,8 @@ class Tensor:
                     self.shape, other.shape
                 )
             )
-        left = dl.Tensor([self.m]) if len(self.shape) == 1 else dl.Tensor(self.m)
-        other = dl.Tensor([[i] for i in other]) if len(other.shape) == 1 else other
+        left = Tensor([self.m]) if len(self.shape) == 1 else Tensor(self.m)
+        other = Tensor([[i] for i in other]) if len(other.shape) == 1 else other
 
         result = zeros((self.shape[0], other.shape[1]))
         it = result.index_iterator()
@@ -97,7 +93,7 @@ class Tensor:
             flat_result = []
             for e in result:
                 flat_result.extend(e)
-            return dl.Tensor(flat_result)
+            return Tensor(flat_result)
         else:
             return result
 
@@ -153,8 +149,8 @@ class Tensor:
     @staticmethod
     def get_tensor_shape(t):
         result = []
-        while isinstance(t, list) or isinstance(t, dl.Tensor):
-            if isinstance(t, dl.Tensor):
+        while isinstance(t, list) or isinstance(t, Tensor):
+            if isinstance(t, Tensor):
                 result.extend(t.shape)
                 break
             result.append(len(t))
@@ -164,28 +160,28 @@ class Tensor:
                 t = False
         return tuple(result)
 
-    # x <dl.Tensor> of shape (n,)
+    # x <Tensor> of shape (n,)
     def v_append(self, x):
         assert_n_dims(x, 1)
         if self.shape[0] != x.shape[0]:
             raise ValueError(
-                "The shape of x must match the first dimension of the dl.Tensor but x has {} shape "
-                "and dl.Tensor has {} shape".format(x.shape, self.shape)
+                "The shape of x must match the first dimension of the Tensor but x has {} shape "
+                "and Tensor has {} shape".format(x.shape, self.shape)
             )
         if self.n_dims == 1:
             result = [x_i for x_i in self.m]
             result.append(x[0])
-            return dl.Tensor(result)
+            return Tensor(result)
         else:
             result = []
             for row, x_i in zip(self.m, x):
                 new_row = []
                 new_row.extend(row)
                 new_row.append(x_i)
-                result.append(dl.Tensor(new_row))
-            return dl.Tensor(result)
+                result.append(Tensor(new_row))
+            return Tensor(result)
 
-    # could -> dl.Tensor for some reason
+    # could -> Tensor for some reason
     # also couldn't do f: function
     def apply(self, f):
         it = self.index_iterator()
@@ -195,6 +191,34 @@ class Tensor:
 
         return result
 
-# value <any>
-# shape <tuple>
-# Returns a dl.Tensor full of value of a certain shape
+
+def broadcast(a, b):
+
+    resulting_shape = []
+    i = len(a.shape) - 1
+    j = len(b.shape) - 1
+    while i >= 0 or j >= 0:
+        if a.shape[i] != b.shape[j]:
+            if i < 0:
+                resulting_shape.append(b.shape[j])
+            elif j < 0:
+                resulting_shape.append(a.shape[i])
+            elif a.shape[i] == 1:
+                resulting_shape.append(b.shape[j])
+            elif b.shape[j] == 1:
+                resulting_shape.append(a.shape[i])
+            else:
+                raise ValueError('Cannot broadcast the following shapes: {}, {}'.format(a.shape, b.shape))
+        else:
+            resulting_shape.append(a.shape[i])
+        i -= 1
+        j -= 1
+    resulting_shape = resulting_shape[::-1]
+    print(resulting_shape)
+
+
+def tile(a, n):
+    return Tensor([a for _ in range(n)])
+
+
+

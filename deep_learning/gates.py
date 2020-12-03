@@ -33,6 +33,7 @@ class ComputationalGraph:
     def backward(self):
         grad = 1
         for k in reversed(self.ordered_gates):
+            print('k: {}'.format(k))
             grad = k.backward(grad)
         return grad
 
@@ -81,6 +82,12 @@ class AffineGate:
         return result
 
     def backward(self, dz):
+        print('dz - backward - AffineGate: {}, shape: {}, self.x: {}, shape: {}, weights: {}, shape: {}'.format(dz,
+                                                                                                                dz.shape,
+                                                                                                                self.x,
+                                                                                                                self.x.shape,
+                                                                                                                self.weights,
+                                                                                                                self.weights.shape))
         grad_weights = self.x * dz
         print('[Backward in AffineGate] Gradient of loss with respect to weights: {}'.format(grad_weights))
         self.weights = self.weights - (dl.Tensor([.1]) * grad_weights)
@@ -127,12 +134,14 @@ class DummyLoss:
         return result
 
 
-affine1 = AffineGate(5, 1, w_init_strat='ones')
+affine1 = AffineGate(5, 3, w_init_strat='ones')
+affine2 = AffineGate(3, 1, w_init_strat='ones')
 relu1 = ReluGate()
 loss = DummyLoss()
 
 graph = ComputationalGraph(affine1)
-graph.add_edge(affine1, relu1)
+graph.add_edge(affine1, affine2)
+graph.add_edge(affine2, relu1)
 graph.add_edge(relu1, loss)
 
 inputs = dl.Tensor([2, -3, 4, 5, 1])
